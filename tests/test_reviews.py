@@ -1,9 +1,10 @@
 """Tests for the Review endpoints."""
 
 import pytest
+import pytest_asyncio
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def book_id(client):
     """Create an author + book and return the book ID."""
     author = await client.post("/api/authors", json={"name": "Review Author"})

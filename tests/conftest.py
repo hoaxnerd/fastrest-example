@@ -8,8 +8,8 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from fastrest.routers import DefaultRouter
 from fastrest.test import APIClient
 
-from example.models import Base
-from example.views import AuthorViewSet, BookViewSet, TagViewSet, ReviewViewSet
+from models import Base
+from views import AuthorViewSet, BookViewSet, TagViewSet, ReviewViewSet
 
 
 @pytest_asyncio.fixture

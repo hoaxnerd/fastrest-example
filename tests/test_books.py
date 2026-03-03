@@ -1,9 +1,10 @@
 """Tests for the Book endpoints."""
 
 import pytest
+import pytest_asyncio
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def author_id(client):
     """Create an author and return their ID — needed for every book."""
     resp = await client.post("/api/authors", json={"name": "Test Author"})
@@ -67,7 +68,10 @@ async def test_list_books(client, author_id):
 
     resp = await client.get("/api/books")
     assert resp.status_code == 200
-    assert len(resp.json()) >= 2
+    data = resp.json()
+    # BookViewSet has pagination, so response is an envelope
+    assert data["count"] >= 2
+    assert len(data["results"]) >= 2
 
 
 @pytest.mark.asyncio

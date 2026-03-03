@@ -4,8 +4,8 @@ from fastapi import FastAPI, Request
 
 from fastrest.routers import DefaultRouter
 
-from example.db import SessionLocal, init_db
-from example.views import AuthorViewSet, BookViewSet, TagViewSet, ReviewViewSet
+from db import SessionLocal, init_db
+from views import AuthorViewSet, BookViewSet, TagViewSet, ReviewViewSet
 
 # --- Router setup (DRF-style) ---
 router = DefaultRouter()

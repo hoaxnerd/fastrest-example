@@ -4,10 +4,12 @@ from fastrest.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from fastrest.decorators import action
 from fastrest.response import Response
 from fastrest.permissions import AllowAny
+from fastrest.pagination import PageNumberPagination
+from fastrest.filters import SearchFilter, OrderingFilter
 from fastrest import status
 
-from example.models import Author, Book, Tag, Review
-from example.serializers import (
+from models import Author, Book, Tag, Review
+from serializers import (
     AuthorSerializer,
     BookSerializer,
     BookDetailSerializer,
@@ -31,9 +33,19 @@ class AuthorViewSet(ModelViewSet):
         return Response(data=serializer.data)
 
 
+class BookPagination(PageNumberPagination):
+    page_size = 20
+    max_page_size = 100
+
+
 class BookViewSet(ModelViewSet):
     queryset = Book
     serializer_class = BookSerializer
+    pagination_class = BookPagination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["title", "description", "isbn"]
+    ordering_fields = ["title", "price"]
+    ordering = ["title"]
 
     def get_serializer_class(self):
         if self.action == "retrieve":

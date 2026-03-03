@@ -4,7 +4,7 @@ from fastrest.serializers import ModelSerializer, Serializer
 from fastrest.fields import CharField, IntegerField, FloatField, SerializerMethodField
 from fastrest.exceptions import ValidationError
 
-from example.models import Author, Book, Tag, Review
+from models import Author, Book, Tag, Review
 
 
 class AuthorSerializer(ModelSerializer):

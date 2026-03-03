@@ -2,7 +2,7 @@
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
-from example.models import Base
+from models import Base
 
 DATABASE_URL = "sqlite+aiosqlite:///./bookstore.db"
 
