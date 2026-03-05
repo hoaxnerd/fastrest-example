@@ -3,6 +3,8 @@
 from fastapi import FastAPI, Request
 
 from fastrest.routers import DefaultRouter
+from fastrest.settings import configure
+from fastrest.mcp import mount_mcp
 
 from db import SessionLocal, init_db
 from views import AuthorViewSet, BookViewSet, TagViewSet, ReviewViewSet
@@ -16,7 +18,19 @@ router.register("reviews", ReviewViewSet, basename="review")
 
 # --- FastAPI app ---
 app = FastAPI(title="Bookstore API", version="0.1.0")
+
+# --- App configuration (DRF-style settings) ---
+configure(app, {
+    "SKILL_NAME": "bookstore",
+    "SKILL_BASE_URL": "http://localhost:8000/api",
+    "SKILL_DESCRIPTION": "Manage a bookstore with authors, books, tags, and reviews.",
+    "MCP_PREFIX": "/mcp",
+})
+
 app.include_router(router.urls, prefix="/api")
+
+# --- Mount MCP server for agent integration ---
+mount_mcp(app, router)
 
 
 @app.on_event("startup")

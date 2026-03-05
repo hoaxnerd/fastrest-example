@@ -9,7 +9,7 @@ from fastrest.routers import DefaultRouter
 from fastrest.test import APIClient
 
 from models import Base
-from views import AuthorViewSet, BookViewSet, TagViewSet, ReviewViewSet
+from views import AuthorViewSet, BookViewSet, TagViewSet, ReviewViewSet, BookRateThrottle
 
 
 @pytest_asyncio.fixture
@@ -21,6 +21,12 @@ async def db():
     session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     yield engine, session_factory
     await engine.dispose()
+
+
+@pytest.fixture(autouse=True)
+def clear_throttle_cache():
+    """Clear throttle caches between tests."""
+    BookRateThrottle.cache.clear()
 
 
 @pytest.fixture

@@ -63,3 +63,12 @@ class Review(Base):
     comment = Column(Text, nullable=True)
 
     book = relationship("Book", back_populates="reviews")
+
+
+class ApiToken(Base):
+    __tablename__ = "api_tokens"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    key = Column(String(64), nullable=False, unique=True)
+    user_name = Column(String(100), nullable=False)
+    is_staff = Column(Boolean, default=False)
