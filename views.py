@@ -3,7 +3,7 @@
 from fastrest.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from fastrest.decorators import action
 from fastrest.response import Response
-from fastrest.permissions import AllowAny, IsAuthenticatedOrReadOnly
+from fastrest.permissions import AllowAny, IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly
 from fastrest.pagination import PageNumberPagination
 from fastrest.filters import SearchFilter, OrderingFilter
 from fastrest.throttling import SimpleRateThrottle
@@ -18,13 +18,25 @@ from serializers import (
     ReviewSerializer,
 )
 from authentication import token_auth
+from permissions import IsReviewAuthor
 
 
 class AuthorViewSet(ModelViewSet):
     queryset = Author
     serializer_class = AuthorSerializer
 
-    @action(methods=["get"], detail=True, url_path="books")
+    # Agent integration — customize how this resource appears in SKILL.md
+    skill_description = "Manage authors in the bookstore catalog."
+    skill_examples = [
+        {
+            "description": "List all active authors",
+            "request": "GET /authors",
+            "response": "200",
+        },
+    ]
+
+    @action(methods=["get"], detail=True, url_path="books",
+            mcp_description="List all books written by this author")
     async def books(self, request, **kwargs):
         """List all books by this author."""
         author = await self.get_object()
@@ -57,15 +69,29 @@ class BookViewSet(ModelViewSet):
     ordering = ["title"]
     throttle_classes = [BookRateThrottle]
 
-    # Agent integration customization
+    # Agent integration — full customization
     skill_description = "Manage the book catalog with search, filtering, and stock management."
+    skill_exclude_fields = ["author_id"]  # hide internal FK from agent docs
+    skill_examples = [
+        {
+            "description": "Search for books about Python",
+            "request": "GET /books?search=python",
+            "response": "200",
+        },
+        {
+            "description": "List books ordered by price (cheapest first)",
+            "request": "GET /books?ordering=price",
+            "response": "200",
+        },
+    ]
 
     def get_serializer_class(self):
         if self.action == "retrieve":
             return BookDetailSerializer
         return BookSerializer
 
-    @action(methods=["get"], detail=False, url_path="in-stock")
+    @action(methods=["get"], detail=False, url_path="in-stock",
+            mcp_description="List only books that are currently in stock")
     async def in_stock(self, request, **kwargs):
         """List only books that are in stock."""
         books = await self.adapter.filter_queryset(
@@ -74,7 +100,8 @@ class BookViewSet(ModelViewSet):
         serializer = self.get_serializer(books, many=True)
         return Response(data=serializer.data)
 
-    @action(methods=["post"], detail=True, url_path="toggle-stock")
+    @action(methods=["post"], detail=True, url_path="toggle-stock",
+            mcp_description="Toggle whether a book is marked as in stock")
     async def toggle_stock(self, request, **kwargs):
         """Toggle the in_stock flag."""
         book = await self.get_object()
@@ -87,13 +114,21 @@ class BookViewSet(ModelViewSet):
 class TagViewSet(ModelViewSet):
     queryset = Tag
     serializer_class = TagSerializer
+    skill_description = "Manage tags for categorizing books."
 
 
 class ReviewViewSet(ModelViewSet):
     queryset = Review
     serializer_class = ReviewSerializer
     authentication_classes = [token_auth]
-    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    # Permission composition with & and | operators:
+    # Reads are public, writes require auth AND (be the review author OR admin)
+    permission_classes = [IsAuthenticatedOrReadOnly() & (IsReviewAuthor() | IsAdminUser())]
+
+    # Agent integration
+    skill_description = "Read and write book reviews. Writing requires authentication."
+    skill_exclude_actions = ["destroy"]  # don't advertise delete to agents
 
     async def perform_create(self, serializer):
         # Could add extra logic here like notifying the book author
